@@ -1,0 +1,4 @@
+name = Nasa Asteroid
+description = This is a game using live Nasa Meteor data 
+core = 7.x
+package = My Modules 

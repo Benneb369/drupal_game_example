@@ -1,0 +1,73 @@
+<?php
+/**
+ * Implements hook_menu().
+ */
+function nasa_asteroid_menu() {
+  $items['game'] = array(
+    'title' => 'Lets Play!',
+    'page callback' => 'nasa_asteroid_page',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+$items['game/insert_score'] = array(
+    'title' => t('insert_score'),
+    'type' => MENU_CALLBACK,
+    'page callback' => 'insert_score_ajax',
+    'access arguments' => array('access content'),
+  );
+
+$items['game/fetch_scores'] = array(
+    'title' => t('fetch_scores'),
+    'type' => MENU_CALLBACK,
+    'page callback' => 'fetch_scores_ajax',
+    'access arguments' => array('access content'),
+  );
+
+  return $items;
+}
+
+/**
+ * Page callback for /game.
+ */
+function nasa_asteroid_page() {
+  drupal_add_js('https://code.createjs.com/easeljs-0.8.2.min.js', 'external');
+  drupal_add_js('https://code.createjs.com/tweenjs-0.6.2.min.js', 'external');
+  drupal_add_js('https://code.createjs.com/soundjs-0.6.2.min.js', 'external');
+  drupal_add_js('https://code.createjs.com/preloadjs-0.6.2.min.js', 'external');
+  drupal_add_js(drupal_get_path('module', 'nasa_asteroid') . '/nasa_asteroid_game.js');
+  return '<canvas style="background: black;" id="gameCanvas" width="500" height="300"></canvas>';
+}
+
+/**
+ * insert score ajax call back
+ */
+function insert_score_ajax() {
+  // Retrieve the score value
+  $score = (int)$_POST['score'];
+  global $user;
+  // insert new score to table
+  db_insert('highscores')
+  ->fields(array(
+    'score' => $score,
+    'uid' => $user->uid
+  ))
+  ->execute();
+
+$results = db_query('SELECT name, score FROM highscores INNER JOIN users ON users.uid=highscores.uid ORDER BY score DESC LIMIT 6');
+  foreach($results as $row){
+     $data[] = $row;
+ }
+  drupal_json_output($data);
+}
+
+
+/**
+ * fetch score ajax call back
+ */
+function fetch_scores_ajax() {
+  $results = db_query('SELECT name, score FROM highscores INNER JOIN users ON users.uid=highscores.uid ORDER BY score DESC LIMIT 6');
+  foreach($results as $row){
+     $data[] = $row;
+ }
+  drupal_json_output($data);
+}
